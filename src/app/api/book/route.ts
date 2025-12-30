@@ -7,10 +7,10 @@ import { format } from "date-fns";
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { serviceIds, date, time, customerName, customerPhone, firebaseUid } = body;
+        const { serviceIds, date, time, customerName, customerPhone, firebaseUid, startTimeISO } = body;
 
         // Validate input
-        if (!serviceIds || !date || !time || !customerName || !customerPhone) {
+        if (!serviceIds || (!startTimeISO && (!date || !time)) || !customerName || !customerPhone) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -21,9 +21,14 @@ export async function POST(request: NextRequest) {
         const serviceNames = selectedServices.map(s => s.title).join(", ");
 
         // Parse start time
-        const [hours, minutes] = time.split(":").map(Number);
-        const startTime = new Date(date);
-        startTime.setHours(hours, minutes, 0, 0);
+        let startTime: Date;
+        if (startTimeISO) {
+            startTime = new Date(startTimeISO);
+        } else {
+            const [hours, minutes] = time.split(":").map(Number);
+            startTime = new Date(date);
+            startTime.setHours(hours, minutes, 0, 0);
+        }
 
         const endTime = new Date(startTime);
         endTime.setMinutes(endTime.getMinutes() + totalDuration);

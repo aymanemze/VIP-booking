@@ -64,6 +64,9 @@ export default function AdminDashboard() {
         e.preventDefault();
         setSubmitting(true);
         try {
+            // Create date object in local timezone
+            const dateObj = new Date(`${walkInForm.date}T${walkInForm.time}`);
+
             const res = await fetch("/api/book", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -73,6 +76,7 @@ export default function AdminDashboard() {
                     serviceIds: [walkInForm.serviceId],
                     date: walkInForm.date,
                     time: walkInForm.time,
+                    startTimeISO: dateObj.toISOString(),
                 }),
             });
 
