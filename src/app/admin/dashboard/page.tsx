@@ -195,7 +195,7 @@ export default function AdminDashboard() {
                         onClick={() => setIsWalkInOpen(true)}
                         className="bg-white text-black font-semibold py-3 px-6 rounded-xl hover:bg-zinc-100 transition"
                     >
-                        Add Walk-in Customer
+                        Add Walk-in Customer (v1.1)
                     </button>
                     <button
                         onClick={() => setIsBlockTimeOpen(true)}
