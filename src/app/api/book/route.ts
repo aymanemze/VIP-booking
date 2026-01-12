@@ -21,16 +21,19 @@ export async function POST(request: NextRequest) {
         const serviceNames = selectedServices.map(s => s.title).join(", ");
 
         // Parse start time
+        // Parse start time
         let startTime: Date;
-        if (startTimeISO) {
-            startTime = new Date(startTimeISO);
-        } else {
-            // Construct date with fixed timezone (GMT+1 for Morocco)
-            // We assume the incoming date is YYYY-MM-DD and time is HH:mm
-            // We want to treat this as local time in the business timezone.
+
+        // Prioritize date and time based construction to ensure correct timezone (GMT+1) and zero seconds
+        if (date && time) {
             const dateStr = date.split('T')[0]; // Ensure we just get the YYYY-MM-DD part
             const dateTimeStr = `${dateStr}T${time}:00+01:00`;
             startTime = new Date(dateTimeStr);
+        } else if (startTimeISO) {
+            startTime = new Date(startTimeISO);
+            startTime.setSeconds(0, 0); // Ensure seconds are zeroed out
+        } else {
+            return NextResponse.json({ error: "Missing date/time information" }, { status: 400 });
         }
 
         const endTime = new Date(startTime);
