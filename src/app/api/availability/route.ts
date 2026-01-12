@@ -39,11 +39,9 @@ export async function GET(request: NextRequest) {
         const [startHour, startMin] = workingHours.start_time.split(":").map(Number);
         const [endHour, endMin] = workingHours.end_time.split(":").map(Number);
 
-        // Get existing appointments for this date
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
+        // Get existing appointments for this date (GMT+1)
+        const startOfDay = new Date(`${date}T00:00:00+01:00`);
+        const endOfDay = new Date(`${date}T23:59:59+01:00`);
 
         const { data: appointments } = await supabaseAdmin
             .from("appointments")
@@ -102,8 +100,7 @@ export async function GET(request: NextRequest) {
                 }
 
                 // Check if slot overlaps with existing appointments
-                const slotStart = new Date(date);
-                slotStart.setHours(hour, min, 0, 0);
+                const slotStart = new Date(`${date}T${time}:00+01:00`);
                 const slotEnd = new Date(slotStart);
                 slotEnd.setMinutes(slotEnd.getMinutes() + 15);
 
