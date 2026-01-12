@@ -160,17 +160,31 @@ function BookingPageContent() {
                         }
 
                         const isSelected = selectedTime === slot.time;
+                        const isInsufficientDuration = !slot.available && slot.reason === "Insufficient duration";
+                        const isDisabled = !slot.available && !isInsufficientDuration;
+
+                        // Handler for unavailable slots
+                        const handleSlotClick = () => {
+                            if (slot.available) {
+                                setSelectedTime(slot.time);
+                            } else if (isInsufficientDuration) {
+                                alert(`Not enough time available. The selected services require ${totalDuration} minutes.`);
+                            }
+                        };
+
                         return (
                             <motion.button
                                 key={slot.time}
-                                whileTap={slot.available ? { scale: 0.95 } : {}}
-                                onClick={() => slot.available && setSelectedTime(slot.time)}
-                                disabled={!slot.available}
+                                whileTap={!isDisabled ? { scale: 0.95 } : {}}
+                                onClick={handleSlotClick}
+                                disabled={isDisabled}
                                 className={`p-3 rounded-xl text-sm font-medium transition-all ${!slot.available
-                                    ? "bg-zinc-900 text-zinc-600 line-through cursor-not-allowed opacity-50"
-                                    : isSelected
-                                        ? "bg-white text-black ring-4 ring-white"
-                                        : "bg-zinc-900 text-white hover:bg-zinc-800"
+                                        ? isInsufficientDuration
+                                            ? "bg-zinc-900 text-zinc-600 opacity-75 cursor-help ring-1 ring-red-900/30" // Special style for duration issue
+                                            : "bg-zinc-900 text-zinc-600 line-through cursor-not-allowed opacity-50"
+                                        : isSelected
+                                            ? "bg-white text-black ring-4 ring-white"
+                                            : "bg-zinc-900 text-white hover:bg-zinc-800"
                                     }`}
                             >
                                 {slot.time}

@@ -269,8 +269,8 @@ export default function CalendarPage() {
                                                 key={hour}
                                                 onClick={() => blockTimeSlot(day, hour)}
                                                 className={`absolute w-full h-[80px] z-10 ${isBlockMode
-                                                        ? "hover:bg-red-500/10 cursor-pointer"
-                                                        : ""
+                                                    ? "hover:bg-red-500/10 cursor-pointer"
+                                                    : ""
                                                     }`}
                                                 style={{ top: (hour - START_HOUR) * HOUR_HEIGHT }}
                                             >
@@ -307,7 +307,7 @@ export default function CalendarPage() {
                                             >
                                                 <div className="flex flex-col h-full gap-0.5">
                                                     <span className="font-semibold text-xs text-purple-100 truncate group-hover/card:whitespace-normal leading-tight">
-                                                        {apt.customer_name}
+                                                        {apt.customer_name || "Unknown Client"}
                                                     </span>
                                                     <div className="flex items-center gap-1 text-[10px] text-purple-300/80">
                                                         <Clock size={10} />
