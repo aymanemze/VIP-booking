@@ -143,8 +143,13 @@ function BookingPageContent() {
 
             {/* Time Slots */}
             <div className="mb-6">
-                <h2 className="mb-3 text-sm font-medium text-zinc-400">
-                    {loading ? "Loading..." : "Available times"}
+                <h2 className="mb-3 text-sm font-medium text-zinc-400 flex justify-between items-center">
+                    <span>{loading ? "Loading..." : "Available times"}</span>
+                    {!loading && timeSlots.some(s => !s.available && s.reason === "Insufficient duration") && (
+                        <span className="text-xs text-orange-400 bg-orange-400/10 px-2 py-1 rounded">
+                            Some times hidden (service requires {totalDuration} min)
+                        </span>
+                    )}
                 </h2>
                 <div className="grid grid-cols-3 gap-3">
                     {timeSlots.map((slot) => {
@@ -159,32 +164,25 @@ function BookingPageContent() {
                             );
                         }
 
-                        const isSelected = selectedTime === slot.time;
                         const isInsufficientDuration = !slot.available && slot.reason === "Insufficient duration";
-                        const isDisabled = !slot.available && !isInsufficientDuration;
 
-                        // Handler for unavailable slots
-                        const handleSlotClick = () => {
-                            if (slot.available) {
-                                setSelectedTime(slot.time);
-                            } else if (isInsufficientDuration) {
-                                alert(`Not enough time available. The selected services require ${totalDuration} minutes.`);
-                            }
-                        };
+                        // Hide insufficient duration slots
+                        if (isInsufficientDuration) return null;
+
+                        const isSelected = selectedTime === slot.time;
+                        const isDisabled = !slot.available;
 
                         return (
                             <motion.button
                                 key={slot.time}
                                 whileTap={!isDisabled ? { scale: 0.95 } : {}}
-                                onClick={handleSlotClick}
+                                onClick={() => slot.available && setSelectedTime(slot.time)}
                                 disabled={isDisabled}
-                                className={`p-3 rounded-xl text-sm font-medium transition-all ${!slot.available
-                                    ? isInsufficientDuration
-                                        ? "bg-zinc-900 text-zinc-600 opacity-75 cursor-help ring-1 ring-red-900/30" // Special style for duration issue
-                                        : "bg-zinc-900 text-zinc-600 line-through cursor-not-allowed opacity-50"
-                                    : isSelected
-                                        ? "bg-white text-black ring-4 ring-white"
-                                        : "bg-zinc-900 text-white hover:bg-zinc-800"
+                                className={`p-3 rounded-xl text-sm font-medium transition-all ${isDisabled
+                                        ? "bg-zinc-900 text-zinc-600 line-through cursor-not-allowed opacity-50"
+                                        : isSelected
+                                            ? "bg-white text-black ring-4 ring-white"
+                                            : "bg-zinc-900 text-white hover:bg-zinc-800"
                                     }`}
                             >
                                 {slot.time}
@@ -214,8 +212,8 @@ function BookingPageContent() {
                         }}
                         disabled={!selectedTime}
                         className={`rounded-full px-6 py-2 text-sm font-medium text-white transition-all ${selectedTime
-                                ? "bg-black hover:scale-105 hover:bg-zinc-800"
-                                : "bg-zinc-300 cursor-not-allowed"
+                            ? "bg-black hover:scale-105 hover:bg-zinc-800"
+                            : "bg-zinc-300 cursor-not-allowed"
                             }`}
                     >
                         Continue
