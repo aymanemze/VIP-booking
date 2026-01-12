@@ -179,12 +179,12 @@ function BookingPageContent() {
                                 onClick={handleSlotClick}
                                 disabled={isDisabled}
                                 className={`p-3 rounded-xl text-sm font-medium transition-all ${!slot.available
-                                        ? isInsufficientDuration
-                                            ? "bg-zinc-900 text-zinc-600 opacity-75 cursor-help ring-1 ring-red-900/30" // Special style for duration issue
-                                            : "bg-zinc-900 text-zinc-600 line-through cursor-not-allowed opacity-50"
-                                        : isSelected
-                                            ? "bg-white text-black ring-4 ring-white"
-                                            : "bg-zinc-900 text-white hover:bg-zinc-800"
+                                    ? isInsufficientDuration
+                                        ? "bg-zinc-900 text-zinc-600 opacity-75 cursor-help ring-1 ring-red-900/30" // Special style for duration issue
+                                        : "bg-zinc-900 text-zinc-600 line-through cursor-not-allowed opacity-50"
+                                    : isSelected
+                                        ? "bg-white text-black ring-4 ring-white"
+                                        : "bg-zinc-900 text-white hover:bg-zinc-800"
                                     }`}
                             >
                                 {slot.time}
@@ -196,27 +196,32 @@ function BookingPageContent() {
 
 
             {/* Bottom Bar */}
-            {/* Bottom Bar */}
-            {selectedTime && (
-                <motion.div
-                    initial={{ y: 100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="fixed bottom-6 left-4 right-4"
-                >
-                    <div className="flex items-center justify-between rounded-full bg-white p-4 pl-6 text-black shadow-lg">
-                        <div className="flex flex-col">
-                            <span className="text-xs text-zinc-500">MAD {totalPrice}</span>
-                            <span className="font-semibold">{selectedServices.length} service • {totalDuration} min</span>
-                        </div>
-                        <button
-                            onClick={() => router.push(`/auth?services=${serviceIds.join(",")}&date=${selectedDate.toISOString()}&time=${selectedTime}`)}
-                            className="rounded-full bg-black px-6 py-2 text-sm font-medium text-white transition-transform hover:scale-105"
-                        >
-                            Continue
-                        </button>
+            <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="fixed bottom-6 left-4 right-4"
+            >
+                <div className="flex items-center justify-between rounded-full bg-white p-4 pl-6 text-black shadow-lg">
+                    <div className="flex flex-col">
+                        <span className="text-xs text-zinc-500">MAD {totalPrice}</span>
+                        <span className="font-semibold">{selectedServices.length} {selectedServices.length === 1 ? 'service' : 'services'} • {totalDuration} min</span>
                     </div>
-                </motion.div>
-            )}
+                    <button
+                        onClick={() => {
+                            if (selectedTime) {
+                                router.push(`/auth?services=${serviceIds.join(",")}&date=${selectedDate.toISOString()}&time=${selectedTime}`);
+                            }
+                        }}
+                        disabled={!selectedTime}
+                        className={`rounded-full px-6 py-2 text-sm font-medium text-white transition-all ${selectedTime
+                                ? "bg-black hover:scale-105 hover:bg-zinc-800"
+                                : "bg-zinc-300 cursor-not-allowed"
+                            }`}
+                    >
+                        Continue
+                    </button>
+                </div>
+            </motion.div>
         </main>
     );
 }
