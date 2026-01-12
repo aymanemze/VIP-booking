@@ -39,7 +39,49 @@ function BookingPageContent() {
                 const data = await response.json();
 
                 if (data.slots) {
-                    setTimeSlots(data.slots);
+                    const slots: TimeSlot[] = data.slots;
+
+                    // Ensure totalDuration is a number (handle potential string issues)
+                    const durationNum = Number(totalDuration);
+                    const slotsNeeded = Math.ceil(durationNum / 15);
+
+                    console.log(`Debug: Duration=${durationNum}, SlotsNeeded=${slotsNeeded}`);
+
+                    const processedSlots = slots.map((slot, index) => {
+                        if (!slot.available) return slot;
+
+                        // If we don't need extra slots, it's available
+                        if (slotsNeeded <= 1) return slot;
+
+                        // Check if we have enough consecutive slots
+                        let consecutiveSlots = 1; // Start with current slot (already checked available)
+
+                        for (let i = 1; i < slotsNeeded; i++) {
+                            const nextSlot = slots[index + i];
+
+                            // 1. Check existence and availability
+                            if (!nextSlot || !nextSlot.available || nextSlot.is_lunch) {
+                                return { ...slot, available: false, reason: "Insufficient duration" };
+                            }
+
+                            // 2. Check strict continuity (15 min gap)
+                            const prevSlot = slots[index + i - 1]; // Use previous in chain
+                            const [prevH, prevM] = prevSlot.time.split(":").map(Number);
+                            const [currH, currM] = nextSlot.time.split(":").map(Number);
+                            const prevMinutes = prevH * 60 + prevM;
+                            const currMinutes = currH * 60 + currM;
+
+                            if (currMinutes - prevMinutes !== 15) {
+                                return { ...slot, available: false, reason: "break in continuity" };
+                            }
+
+                            consecutiveSlots++;
+                        }
+
+                        return slot;
+                    });
+
+                    setTimeSlots(processedSlots);
                 }
             } catch (error) {
                 console.error("Error fetching availability:", error);
@@ -58,7 +100,7 @@ function BookingPageContent() {
         };
 
         fetchAvailability();
-    }, [selectedDate]);
+    }, [selectedDate, totalDuration]); // Re-run when totalDuration changes
 
     const isSameDay = (date1: Date, date2: Date) => {
         return date1.toDateString() === date2.toDateString();
@@ -138,6 +180,8 @@ function BookingPageContent() {
                 </div>
             </div>
 
+
+            {/* Bottom Bar */}
             {/* Bottom Bar */}
             {selectedTime && (
                 <motion.div

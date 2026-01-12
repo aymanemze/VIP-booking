@@ -21,4 +21,5 @@ export interface TimeSlot {
     time: string; // "13:45"
     available: boolean;
     is_lunch?: boolean;
+    reason?: string;
 }

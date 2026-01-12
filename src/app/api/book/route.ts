@@ -25,13 +25,52 @@ export async function POST(request: NextRequest) {
         if (startTimeISO) {
             startTime = new Date(startTimeISO);
         } else {
-            const [hours, minutes] = time.split(":").map(Number);
-            startTime = new Date(date);
-            startTime.setHours(hours, minutes, 0, 0);
+            // Construct date with fixed timezone (GMT+1 for Morocco)
+            // We assume the incoming date is YYYY-MM-DD and time is HH:mm
+            // We want to treat this as local time in the business timezone.
+            const dateStr = date.split('T')[0]; // Ensure we just get the YYYY-MM-DD part
+            const dateTimeStr = `${dateStr}T${time}:00+01:00`;
+            startTime = new Date(dateTimeStr);
         }
 
         const endTime = new Date(startTime);
         endTime.setMinutes(endTime.getMinutes() + totalDuration);
+
+        // --- VALIDATION: Check for conflicts ---
+        // Check if the requested time range overlaps with any existing appointments
+        // or blocked times.
+
+        const { data: conflictingAppointments, error: conflictError } = await supabaseAdmin
+            .from("appointments")
+            .select("id")
+            .filter("status", "eq", "confirmed")
+            .or(`and(start_time.lte.${startTime.toISOString()},end_time.gt.${startTime.toISOString()}),and(start_time.lt.${endTime.toISOString()},end_time.gte.${endTime.toISOString()}),and(start_time.gte.${startTime.toISOString()},end_time.lte.${endTime.toISOString()})`)
+            .maybeSingle();
+
+        if (conflictError) {
+            console.error("Error checking conflicts:", conflictError);
+            return NextResponse.json({ error: "Failed to check availability" }, { status: 500 });
+        }
+
+        if (conflictingAppointments) {
+            return NextResponse.json({ error: "Selected time slot is no longer available" }, { status: 409 });
+        }
+
+        const { data: blockedTimes, error: blockedError } = await supabaseAdmin
+            .from("blocked_times")
+            .select("id")
+            .or(`and(start_time.lte.${startTime.toISOString()},end_time.gt.${startTime.toISOString()}),and(start_time.lt.${endTime.toISOString()},end_time.gte.${endTime.toISOString()}),and(start_time.gte.${startTime.toISOString()},end_time.lte.${endTime.toISOString()})`)
+            .maybeSingle();
+
+        if (blockedError) {
+            console.error("Error checking blocked times:", blockedError);
+            return NextResponse.json({ error: "Failed to check availability" }, { status: 500 });
+        }
+
+        if (blockedTimes) {
+            return NextResponse.json({ error: "Selected time slot is blocked" }, { status: 409 });
+        }
+
 
         // Create or get customer
         let customerId = null;
